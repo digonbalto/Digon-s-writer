@@ -1,0 +1,848 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Academic Writer</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f5f3ee; min-height: 100vh; color: #1a1a18;
+  padding: 2rem 1rem 3rem;
+}
+.container { max-width: 920px; margin: 0 auto; }
+header { margin-bottom: 1.75rem; }
+header h1 { font-size: 1.6rem; font-weight: 600; letter-spacing: -0.02em; color: #1a1a18; }
+header p { font-size: 0.875rem; color: #888; margin-top: 0.3rem; }
+
+.mode-tabs {
+  display: flex; margin-bottom: 1.5rem;
+  background: #fff; border-radius: 10px;
+  border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden; width: fit-content;
+}
+.mode-tab {
+  padding: 0.6rem 1.3rem; font-size: 0.85rem; font-weight: 500;
+  cursor: pointer; border: none; background: transparent; color: #999;
+  transition: all 0.15s; border-right: 0.5px solid rgba(0,0,0,0.08);
+  display: flex; align-items: center; gap: 6px;
+}
+.mode-tab:last-child { border-right: none; }
+.mode-tab.active { background: #1a1a18; color: #fff; }
+.mode-tab:not(.active):hover { background: #f5f3ee; color: #444; }
+
+.mode-panel { display: none; }
+.mode-panel.active { display: block; }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+@media (max-width: 600px) { .field-row { grid-template-columns: 1fr; } }
+
+.field-group { display: flex; flex-direction: column; gap: 0.4rem; }
+.field-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #aaa; }
+
+select, input[type="text"] {
+  border: 0.5px solid rgba(0,0,0,0.12); border-radius: 8px;
+  padding: 0.55rem 0.75rem; font-size: 0.875rem; font-family: inherit;
+  background: #fff; color: #1a1a18; outline: none; transition: border-color 0.15s;
+}
+select:focus, input[type="text"]:focus { border-color: rgba(0,0,0,0.3); }
+
+.panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 600px) { .panels { grid-template-columns: 1fr; } }
+
+.panel {
+  background: #fff; border-radius: 12px;
+  border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column;
+}
+.full-panel { background: #fff; border-radius: 12px; border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden; }
+.panel-header {
+  padding: 0.7rem 1rem; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 0.5px solid rgba(0,0,0,0.07);
+}
+.panel-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #bbb; }
+.char-count { font-size: 0.72rem; color: #ccc; }
+
+.btn-copy-big {
+  margin-left: auto;
+  background: transparent; color: #1a1a18;
+  border: 0.5px solid rgba(0,0,0,0.25); border-radius: 8px;
+  padding: 0.65rem 1.1rem; font-size: 0.875rem; font-weight: 500;
+  cursor: pointer; transition: all 0.15s; letter-spacing: -0.01em;
+}
+.btn-copy-big:hover { background: #1a1a18; color: #f4f2ed; }
+.btn-copy-big.copied { color: #2a7a4b; border-color: #2a7a4b; background: #f0faf4; }
+
+.btn-copy {
+  font-size: 0.75rem; padding: 0.28rem 0.6rem; border-radius: 6px;
+  border: 0.5px solid rgba(0,0,0,0.12); background: transparent; color: #aaa; cursor: pointer; transition: color 0.15s;
+}
+.btn-copy:hover { color: #555; }
+.btn-copy.copied { color: #2a7a4b; border-color: #2a7a4b44; }
+
+textarea {
+  flex: 1; border: none; outline: none; resize: none; padding: 1rem;
+  font-size: 0.875rem; line-height: 1.75; font-family: inherit;
+  background: transparent; color: #1a1a18; min-height: 260px;
+}
+textarea::placeholder { color: #ccc; }
+.notes-textarea {
+  min-height: 90px; border: 0.5px solid rgba(0,0,0,0.12);
+  border-radius: 8px; padding: 0.65rem 0.75rem; resize: vertical;
+}
+
+.output-area {
+  flex: 1; padding: 1rem; font-size: 0.875rem; line-height: 1.75;
+  min-height: 260px; color: #1a1a18; white-space: pre-wrap; word-wrap: break-word;
+}
+.output-area.placeholder { color: #ccc; font-style: italic; }
+
+.draft-output {
+  padding: 1rem; font-size: 0.875rem; line-height: 1.75;
+  min-height: 360px; color: #1a1a18; white-space: pre-wrap; word-wrap: break-word;
+}
+.draft-output.placeholder { color: #ccc; font-style: italic; }
+
+.action-row { margin-top: 1rem; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+
+.btn-primary {
+  background: #1a1a18; color: #f4f2ed; border: none; border-radius: 8px;
+  padding: 0.65rem 1.4rem; font-size: 0.875rem; font-weight: 500;
+  cursor: pointer; transition: opacity 0.15s; letter-spacing: -0.01em;
+}
+.btn-primary:hover { opacity: 0.85; }
+.btn-primary:active { opacity: 0.7; transform: scale(0.99); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-secondary {
+  background: transparent; color: #aaa;
+  border: 0.5px solid rgba(0,0,0,0.12); border-radius: 8px;
+  padding: 0.65rem 1rem; font-size: 0.875rem; cursor: pointer; transition: color 0.15s;
+}
+.btn-secondary:hover { color: #555; }
+
+.spinner {
+  display: inline-block; width: 13px; height: 13px;
+  border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+  margin-right: 6px; vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.status-bar { margin-top: 0.6rem; font-size: 0.78rem; color: #bbb; min-height: 1.1em; }
+.status-bar.error { color: #c0392b; }
+
+.process-strip {
+  margin-top: 1.5rem; display: grid; grid-template-columns: repeat(6, 1fr);
+  background: #fff; border-radius: 12px; border: 0.5px solid rgba(0,0,0,0.1); overflow: hidden;
+}
+@media (max-width: 600px) { .process-strip { grid-template-columns: repeat(3, 1fr); } }
+.process-step {
+  padding: 0.8rem 0.65rem; border-right: 0.5px solid rgba(0,0,0,0.07); transition: background 0.2s;
+}
+.process-step:last-child { border-right: none; }
+.process-step.active { background: #1a1a18; }
+.step-num { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.08em; color: #ccc; margin-bottom: 0.25rem; }
+.process-step.active .step-num { color: #666; }
+.step-label { font-size: 0.74rem; font-weight: 500; color: #555; line-height: 1.3; }
+.process-step.active .step-label { color: #fff; }
+.step-icon { font-size: 0.85rem; margin-bottom: 0.3rem; display: block; }
+
+.hedging-bar {
+  margin-top: 1.25rem; background: #fff; border-radius: 12px;
+  border: 0.5px solid rgba(0,0,0,0.1); padding: 0.9rem 1rem;
+}
+.hedging-title { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: #bbb; margin-bottom: 0.65rem; }
+.hedging-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.hedging-chip {
+  font-size: 0.75rem; padding: 0.25rem 0.65rem; border-radius: 999px;
+  border: 0.5px solid rgba(0,0,0,0.1); background: #f5f3ee;
+  color: #aaa; font-style: italic; transition: all 0.2s;
+}
+.hedging-chip.used { background: #1a1a1812; border-color: rgba(0,0,0,0.2); color: #333; }
+
+.examples-row { margin-top: 1.1rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.examples-label { font-size: 0.78rem; color: #bbb; }
+.example-chip {
+  font-size: 0.75rem; padding: 0.28rem 0.65rem; border-radius: 999px;
+  border: 0.5px solid rgba(0,0,0,0.12); background: #fff; cursor: pointer; color: #666; transition: all 0.1s;
+}
+.example-chip:hover { background: #1a1a18; color: #f4f2ed; border-color: #1a1a18; }
+
+.score-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; margin-bottom: 1rem; }
+@media (max-width: 500px) { .score-row { grid-template-columns: repeat(2, 1fr); } }
+.score-card { background: #f5f3ee; border-radius: 8px; padding: 0.75rem; text-align: center; }
+.score-val { font-size: 1.5rem; font-weight: 600; color: #1a1a18; line-height: 1; margin-bottom: 0.25rem; }
+.score-lbl { font-size: 0.68rem; color: #999; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.critique-section { padding: 1rem; }
+.critique-block { margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+.critique-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.critique-block-title { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: #bbb; margin-bottom: 0.5rem; }
+.critique-text { font-size: 0.875rem; line-height: 1.7; color: #333; white-space: pre-wrap; }
+.critique-text.placeholder { color: #ccc; font-style: italic; }
+
+.apply-bar {
+  margin-top: 1rem; background: #1a1a18; border-radius: 12px;
+  padding: 1rem 1.25rem; display: flex; align-items: center;
+  justify-content: space-between; gap: 1rem;
+}
+.apply-bar-left { flex: 1; }
+.apply-bar-title { font-size: 0.9rem; font-weight: 600; color: #fff; margin-bottom: 0.2rem; }
+.apply-bar-sub { font-size: 0.78rem; color: #888; }
+.btn-apply {
+  background: #f4f2ed; color: #1a1a18; border: none;
+  border-radius: 8px; padding: 0.65rem 1.3rem;
+  font-size: 0.875rem; font-weight: 600; cursor: pointer;
+  white-space: nowrap; transition: opacity 0.15s; letter-spacing: -0.01em;
+}
+.btn-apply:hover { opacity: 0.85; }
+.btn-apply:disabled { opacity: 0.4; cursor: not-allowed; }
+.fix-change-count {
+  font-size: 0.75rem; color: #2a7a4b; font-weight: 500; margin-top: 0.4rem;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Academic Writer</h1>
+    <p>Humanize AI text, draft sections, or critique academic writing — with proper hedging throughout.</p>
+  </header>
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="switchMode('humanize')">✦ Humanize</button>
+    <button class="mode-tab" onclick="switchMode('draft')">✎ Draft</button>
+    <button class="mode-tab" onclick="switchMode('critique')">◎ Critique</button>
+  </div>
+
+  <!-- HUMANIZE -->
+  <div class="mode-panel active" id="panel-humanize">
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label">Discipline</label>
+        <select id="h-discipline">
+          <option value="general academic">General academic</option>
+          <option value="natural sciences">Natural sciences</option>
+          <option value="social sciences">Social sciences</option>
+          <option value="humanities">Humanities</option>
+          <option value="law">Law</option>
+          <option value="medicine and health">Medicine / health</option>
+          <option value="engineering">Engineering</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Hedging intensity</label>
+        <select id="h-hedging">
+          <option value="moderate">Moderate — where justified</option>
+          <option value="high">High — thorough epistemic caution</option>
+          <option value="light">Light — confident, minimal hedging</option>
+        </select>
+      </div>
+    </div>
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-label">AI text</span>
+          <span class="char-count" id="h-char-count">0 chars</span>
+        </div>
+        <textarea id="h-input" placeholder="Paste your AI-generated academic text here…"></textarea>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-label">Humanized</span>
+          <button class="btn-copy" id="h-copy-btn" onclick="doCopy('h-output','h-copy-btn')">Copy</button>
+        </div>
+        <div class="output-area placeholder" id="h-output">Output will appear here…</div>
+      </div>
+    </div>
+    <div class="action-row">
+      <button class="btn-primary" id="h-btn" onclick="runHumanize()">Humanize</button>
+      <button class="btn-secondary" onclick="clearMode('humanize')">Clear</button>
+      <button class="btn-copy-big" id="h-copy-big" onclick="doCopy('h-output','h-copy-big')">Copy text</button>
+    </div>
+    <div class="status-bar" id="h-status"></div>
+    <div class="process-strip">
+      <div class="process-step" id="h-step-1"><span class="step-icon">🔍</span><div class="step-num">01</div><div class="step-label">Identify patterns</div></div>
+      <div class="process-step" id="h-step-2"><span class="step-icon">✏️</span><div class="step-num">02</div><div class="step-label">Rewrite sections</div></div>
+      <div class="process-step" id="h-step-3"><span class="step-icon">🎯</span><div class="step-num">03</div><div class="step-label">Preserve meaning</div></div>
+      <div class="process-step" id="h-step-4"><span class="step-icon">🎭</span><div class="step-num">04</div><div class="step-label">Maintain voice</div></div>
+      <div class="process-step" id="h-step-5"><span class="step-icon">💫</span><div class="step-num">05</div><div class="step-label">Add soul</div></div>
+      <div class="process-step" id="h-step-6"><span class="step-icon">🪞</span><div class="step-num">06</div><div class="step-label">Anti-AI pass</div></div>
+    </div>
+    <div class="hedging-bar">
+      <div class="hedging-title">Hedging language detected in output</div>
+      <div class="hedging-chips" id="h-chips"></div>
+    </div>
+    <div class="examples-row">
+      <span class="examples-label">Example:</span>
+      <span class="example-chip" onclick="loadEx('intro')">Paper intro</span>
+      <span class="example-chip" onclick="loadEx('methods')">Methods</span>
+      <span class="example-chip" onclick="loadEx('discussion')">Discussion</span>
+      <span class="example-chip" onclick="loadEx('abstract')">Abstract</span>
+    </div>
+  </div>
+
+  <!-- DRAFT -->
+  <div class="mode-panel" id="panel-draft">
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label">Section type</label>
+        <select id="d-section">
+          <option value="abstract">Abstract</option>
+          <option value="introduction">Introduction</option>
+          <option value="literature review">Literature review</option>
+          <option value="methodology section">Methodology</option>
+          <option value="results section">Results</option>
+          <option value="discussion section">Discussion</option>
+          <option value="conclusion">Conclusion</option>
+          <option value="single academic paragraph">Single paragraph</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Discipline</label>
+        <select id="d-discipline">
+          <option value="general academic">General academic</option>
+          <option value="natural sciences">Natural sciences</option>
+          <option value="social sciences">Social sciences</option>
+          <option value="humanities">Humanities</option>
+          <option value="law">Law</option>
+          <option value="medicine and health">Medicine / health</option>
+          <option value="engineering">Engineering</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label">Topic / thesis</label>
+        <input type="text" id="d-topic" placeholder="e.g. Sleep deprivation and working memory in adolescents…" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Tone</label>
+        <select id="d-tone">
+          <option value="formal — rigorous, third-person, no contractions">Formal — rigorous, third-person</option>
+          <option value="semi-formal — readable and academic, active voice permitted">Semi-formal — readable but academic</option>
+          <option value="accessible — clear prose for a broad academic audience">Accessible — broad audience</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-group" style="margin-bottom:1rem;">
+      <label class="field-label">Key points / notes (optional)</label>
+      <textarea id="d-notes" class="notes-textarea" placeholder="List key arguments, data points, or sources you want included…"></textarea>
+    </div>
+    <div class="full-panel">
+      <div class="panel-header">
+        <span class="panel-label">Draft output</span>
+        <button class="btn-copy" id="d-copy-btn" onclick="doCopy('d-output','d-copy-btn')">Copy</button>
+      </div>
+      <div class="draft-output placeholder" id="d-output">Your draft will appear here…</div>
+    </div>
+    <div class="action-row">
+      <button class="btn-primary" id="d-btn" onclick="runDraft()">Generate draft</button>
+      <button class="btn-secondary" onclick="clearMode('draft')">Clear</button>
+      <button class="btn-copy-big" id="d-copy-big" onclick="doCopy('d-output','d-copy-big')">Copy text</button>
+    </div>
+    <div class="status-bar" id="d-status"></div>
+    <div class="hedging-bar" style="margin-top:1.25rem;">
+      <div class="hedging-title">Hedging language detected in output</div>
+      <div class="hedging-chips" id="d-chips"></div>
+    </div>
+  </div>
+
+  <!-- CRITIQUE -->
+  <div class="mode-panel" id="panel-critique">
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label">Discipline</label>
+        <select id="c-discipline">
+          <option value="general academic">General academic</option>
+          <option value="natural sciences">Natural sciences</option>
+          <option value="social sciences">Social sciences</option>
+          <option value="humanities">Humanities</option>
+          <option value="law">Law</option>
+          <option value="medicine and health">Medicine / health</option>
+          <option value="engineering">Engineering</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Focus</label>
+        <select id="c-focus">
+          <option value="all dimensions">All dimensions</option>
+          <option value="argument and logic">Argument &amp; logic</option>
+          <option value="hedging and epistemic claims">Hedging &amp; epistemic claims</option>
+          <option value="structure and coherence">Structure &amp; coherence</option>
+          <option value="academic style and register">Academic style &amp; register</option>
+          <option value="AI detection and originality">AI detection &amp; originality</option>
+        </select>
+      </div>
+    </div>
+    <div class="panel" style="margin-bottom:0;">
+      <div class="panel-header">
+        <span class="panel-label">Your text</span>
+        <span class="char-count" id="c-char-count">0 chars</span>
+      </div>
+      <textarea id="c-input" placeholder="Paste academic text to critique…"></textarea>
+    </div>
+    <div class="action-row">
+      <button class="btn-primary" id="c-btn" onclick="runCritique()">Critique</button>
+      <button class="btn-secondary" onclick="clearMode('critique')">Clear</button>
+    </div>
+    <div class="status-bar" id="c-status"></div>
+    <div id="c-results" style="display:none; margin-top:1rem;">
+      <div class="score-row" id="c-scores"></div>
+      <div class="full-panel">
+        <div class="panel-header">
+          <span class="panel-label">Analysis</span>
+          <button class="btn-copy" id="c-copy-btn" onclick="doCopy('c-text','c-copy-btn')">Copy</button>
+        </div>
+        <div class="critique-section">
+          <div id="c-text" class="critique-text"></div>
+        </div>
+      </div>
+
+      <div class="apply-bar" id="c-apply-bar">
+        <div class="apply-bar-left">
+          <div class="apply-bar-title">Recommendations ready</div>
+          <div class="apply-bar-sub">Apply all fixes to your text instantly — corrections stream in side-by-side</div>
+        </div>
+        <button class="btn-apply" id="c-apply-btn" onclick="applyFixes()">Apply fixes &#8594;</button>
+      </div>
+
+      <div id="c-fixed-wrapper" style="display:none; margin-top:1rem;">
+        <div class="panels" style="margin-bottom:0.75rem;">
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-label">Original</span>
+            </div>
+            <div class="output-area" id="c-original-mirror" style="min-height:200px; color:#aaa; font-size:0.83rem;"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-label">Fixed</span>
+              <button class="btn-copy" id="c-fixed-copy" onclick="doCopy('c-fixed-output','c-fixed-copy')">Copy</button>
+            </div>
+            <div class="output-area placeholder" id="c-fixed-output" style="min-height:200px;">Applying fixes…</div>
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="btn-copy-big" id="c-fixed-copy-big" onclick="doCopy('c-fixed-output','c-fixed-copy-big')">Copy fixed text</button>
+          <button class="btn-secondary" onclick="rerunCritique()">Re-critique &#8594;</button>
+        </div>
+        <div class="status-bar" id="c-fix-status"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+const HEDGING_TERMS = [
+  'suggests','may indicate','appears to','it is possible that','tends to',
+  'is consistent with','warrants further investigation','cannot be ruled out',
+  'raises the question','is likely','seems to','could be attributed',
+  'may reflect','preliminary evidence','remains unclear','points toward',
+  'further research','remains to be seen','may be explained','tentatively'
+];
+
+let busy = false;
+let lastCritique = null;
+let lastCritiqueInput = '';
+
+function buildChips(containerId) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = HEDGING_TERMS.map(t =>
+    `<span class="hedging-chip" data-term="${t}">${t}</span>`
+  ).join('');
+}
+buildChips('h-chips');
+buildChips('d-chips');
+
+function highlightChips(containerId, text) {
+  const lower = text.toLowerCase();
+  document.querySelectorAll('#' + containerId + ' .hedging-chip').forEach(c => {
+    c.classList.toggle('used', lower.includes(c.dataset.term));
+  });
+}
+
+function switchMode(m) {
+  document.querySelectorAll('.mode-tab').forEach((t,i) =>
+    t.classList.toggle('active', ['humanize','draft','critique'][i] === m));
+  document.querySelectorAll('.mode-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + m).classList.add('active');
+}
+
+function setStep(n) {
+  for (let i = 1; i <= 6; i++) {
+    const el = document.getElementById('h-step-' + i);
+    if (el) el.classList.toggle('active', i === n);
+  }
+}
+function clearSteps() { for (let i=1;i<=6;i++) { const el=document.getElementById('h-step-'+i); if(el) el.classList.remove('active'); } }
+
+function doCopy(elId, btnId) {
+  const el = document.getElementById(elId);
+  if (!el || el.classList.contains('placeholder')) return;
+  const text = el.textContent;
+  if (!text.trim()) return;
+  const btn = document.getElementById(btnId);
+  const succeed = () => {
+    btn.textContent = 'Copied!'; btn.className = 'btn-copy copied';
+    setTimeout(() => { btn.textContent = 'Copy'; btn.className = 'btn-copy'; }, 2200);
+  };
+  function fallback() {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try { document.execCommand('copy'); succeed(); } catch(e) { btn.textContent = 'Select text manually'; }
+    document.body.removeChild(ta);
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(succeed).catch(fallback);
+  } else { fallback(); }
+}
+
+function setStatus(id, msg, err) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.className = 'status-bar' + (err ? ' error' : '');
+}
+
+function clearMode(m) {
+  if (m === 'humanize') {
+    document.getElementById('h-input').value = '';
+    document.getElementById('h-char-count').textContent = '0 chars';
+    const o = document.getElementById('h-output');
+    o.textContent = 'Output will appear here…'; o.className = 'output-area placeholder';
+    setStatus('h-status',''); clearSteps();
+    document.querySelectorAll('#h-chips .hedging-chip').forEach(c => c.classList.remove('used'));
+  } else if (m === 'draft') {
+    document.getElementById('d-topic').value = '';
+    document.getElementById('d-notes').value = '';
+    const o = document.getElementById('d-output');
+    o.textContent = 'Your draft will appear here…'; o.className = 'draft-output placeholder';
+    setStatus('d-status','');
+    document.querySelectorAll('#d-chips .hedging-chip').forEach(c => c.classList.remove('used'));
+  } else {
+    document.getElementById('c-input').value = '';
+    document.getElementById('c-char-count').textContent = '0 chars';
+    document.getElementById('c-results').style.display = 'none';
+    setStatus('c-status','');
+  }
+}
+
+document.getElementById('h-input').addEventListener('input', function() {
+  document.getElementById('h-char-count').textContent = this.value.length + ' chars';
+});
+document.getElementById('c-input').addEventListener('input', function() {
+  document.getElementById('c-char-count').textContent = this.value.length + ' chars';
+});
+
+const EXAMPLES = {
+  intro: `This paper seeks to explore the multifaceted dimensions of urban resilience in the context of rapidly evolving socioeconomic landscapes. By examining a wide range of case studies from diverse geographical contexts, this groundbreaking research aims to contribute to the growing body of scholarly literature that highlights the crucial role of adaptive governance frameworks in shaping sustainable urban futures. The findings presented herein serve as a testament to the complex interplay between institutional capacity and community agency, reflecting broader trends in contemporary urban studies and underscoring the transformative potential of collaborative governance models.`,
+  methods: `This study utilized a mixed-methods approach that is both comprehensive and cutting-edge, leveraging the transformative power of both quantitative and qualitative data to deliver impactful insights. A total of 450 participants were purposefully selected from diverse socioeconomic backgrounds, ensuring that the research captures the full spectrum of lived experiences. The data collection phase employed state-of-the-art survey instruments alongside in-depth interviews, showcasing our commitment to methodological rigor. The findings from this innovative approach serve as a reminder of the importance of triangulation in social research.`,
+  discussion: `The results of this pivotal study underscore the significant relationship between social capital and educational outcomes, marking a crucial milestone in our understanding of inequality. These groundbreaking findings are consistent with prior research while simultaneously highlighting the unique dimensions of this phenomenon in the current rapidly evolving landscape. Moving forward, it is evident that policymakers must embrace transformative strategies that leverage the full potential of community-based interventions, ensuring that all stakeholders are aligned with the broader vision of educational equity.`,
+  abstract: `This paper presents a comprehensive and transformative exploration of the nexus between digital literacy and civic engagement among young adults in urban settings. Nestled at the intersection of technology and democracy, this study employs a vibrant mixed-methods approach to examine how digital competencies serve as catalysts for political participation. The findings reveal groundbreaking insights that stand as a testament to the evolving nature of citizenship in the digital age. The research contributes to the growing body of literature and underscores the vital importance of digital inclusion initiatives.`
+};
+
+function loadEx(key) {
+  document.getElementById('h-input').value = EXAMPLES[key];
+  document.getElementById('h-char-count').textContent = EXAMPLES[key].length + ' chars';
+  const o = document.getElementById('h-output');
+  o.textContent = 'Output will appear here…'; o.className = 'output-area placeholder';
+}
+
+async function stream(system, userMsg, outputEl, statusId, btn, useSteps, chipsId, outputClass) {
+  busy = true; btn.disabled = true;
+  const orig = btn.textContent;
+  btn.innerHTML = '<span class="spinner"></span>Working…';
+  outputEl.textContent = ''; outputEl.className = outputClass;
+  if (useSteps) setStep(1);
+  setStatus(statusId, 'Analysing…');
+
+  let full = '', chars = 0, stepIdx = 1;
+  const thresholds = [0, 80, 200, 360, 520, 700];
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 2000, stream: true,
+        system, messages: [{ role: 'user', content: userMsg }]
+      })
+    });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'API error'); }
+
+    const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const d = line.slice(6); if (d === '[DONE]') continue;
+        try {
+          const p = JSON.parse(d);
+          if (p.type === 'content_block_delta' && p.delta?.text) {
+            full += p.delta.text; outputEl.textContent = full; chars++;
+            if (useSteps && stepIdx < 6 && chars >= thresholds[stepIdx]) { stepIdx++; setStep(stepIdx); }
+            if (chars % 30 === 0) setStatus(statusId, 'Writing… ' + full.split(/\s+/).filter(Boolean).length + ' words');
+          }
+        } catch(e) {}
+      }
+    }
+    if (useSteps) clearSteps();
+    if (chipsId) highlightChips(chipsId, full);
+    setStatus(statusId, 'Done — ' + full.split(/\s+/).filter(Boolean).length + ' words');
+    btn.innerHTML = orig;
+  } catch(err) {
+    if (useSteps) clearSteps();
+    outputEl.textContent = 'Something went wrong. Try again.';
+    outputEl.className = outputClass + ' placeholder';
+    setStatus(statusId, err.message || 'Error', true);
+    btn.innerHTML = orig;
+  }
+  btn.disabled = false; busy = false;
+  return full;
+}
+
+async function runHumanize() {
+  if (busy) return;
+  const input = document.getElementById('h-input').value.trim();
+  if (!input) { setStatus('h-status', 'Paste some text first.'); return; }
+  const disc = document.getElementById('h-discipline').value;
+  const hLevel = document.getElementById('h-hedging').value;
+  const hInstructions = {
+    light: 'Hedge sparingly — only where genuine uncertainty exists.',
+    moderate: 'Integrate hedging where claims are not fully certain: "suggests", "appears to", "may indicate", "is consistent with", "warrants further investigation".',
+    high: 'Apply thorough epistemic caution throughout. Most empirical claims should be hedged: "the data suggests", "preliminary evidence indicates", "cannot be ruled out", "further research is needed".'
+  };
+  const sys = `You are a senior academic editor and writer in ${disc} who rewrites AI-generated text so thoroughly that it reads as the natural work of an experienced human scholar. This is deep rewriting — not light editing.
+
+STEP 1 — IDENTIFY ALL AI PATTERNS
+Flag every instance of: significance inflation ("testament to", "pivotal moment", "evolving landscape", "underscores the importance", "highlights the crucial role"); promotional adjectives ("groundbreaking", "vibrant", "transformative", "cutting-edge", "nestled", "breathtaking", "revolutionary", "innovative"); vague attributions without sources ("experts argue", "scholars note", "researchers have found"); superficial participial add-ons ("…symbolizing X", "…reflecting Y", "…contributing to Z"); chatbot artifacts ("It is important to note", "It is worth mentioning", "At its core", "In today's rapidly evolving"); generic closings ("the future looks bright", "exciting times lie ahead", "paves the way"); copula avoidance ("serves as", "functions as", "stands as" — just say "is"); synonym cycling in triplets ("The model serves as X. The framework functions as Y. The approach stands as Z."); negative parallelism ("It's not just X; it's Y"); false range constructions ("from A to B, from C to D").
+
+STEP 2 — RESTRUCTURE SENTENCES, NOT JUST WORDS
+Do not merely swap flagged words. Rebuild each problem sentence from scratch. Change the syntactic structure. Split long compound sentences. Merge short choppy ones. Move the main claim to where it lands best. A rewritten sentence should share no more than 3–4 consecutive words with the original.
+
+STEP 3 — PRESERVE THE ACADEMIC ARGUMENT
+Keep every substantive claim, every piece of evidence, every logical step. Do not drop content. Do not add facts, citations, or conclusions that were not in the original.
+
+STEP 4 — MATCH REGISTER FOR ${disc}
+Formal academic prose appropriate to the discipline. Precise terminology. No colloquialisms. Third person unless the original used first person. Passive voice where the discipline expects it; active where it is clearer.
+
+STEP 5 — BUILD IN HUMAN TEXTURE
+Real academic writing has unevenness. Mix sentence lengths deliberately — a short blunt sentence after a long analytical one. Use transitional reasoning ("This matters because…", "The implication is…", "What is less clear is…"). Acknowledge limits and complexity where appropriate. Let a point of view come through the framing, not just the conclusions.
+
+STEP 6 — WEAVE IN ACADEMIC HEDGING
+${hInstructions[hLevel]}
+Hedging must be structural, not cosmetic — it should be built into how claims are grammatically framed, not added as a qualifier at the end. Examples: "The data suggest that X may be attributable to…" not "X causes Y (possibly)". "This pattern appears consistent with…" not "This proves X, perhaps."
+
+FINAL ANTI-AI PASS — MANDATORY
+Read the draft and ask: "What still sounds like it was generated?" Look for: any remaining uniform sentence rhythm; any abstract nouns doing work that a concrete verb could do; any claims that float without grounding; any paragraph that opens with a topic sentence so clean it feels assembled. Revise those parts line by line until they pass.
+
+OUTPUT: Return ONLY the finished text. No label, no preamble, no "Here is the rewritten version". Start immediately with the first word of the rewritten prose.`;
+
+  await stream(sys, input,
+    document.getElementById('h-output'), 'h-status',
+    document.getElementById('h-btn'), true, 'h-chips', 'output-area');
+}
+
+async function runDraft() {
+  if (busy) return;
+  const topic = document.getElementById('d-topic').value.trim();
+  if (!topic) { setStatus('d-status', 'Enter a topic or thesis first.'); return; }
+  const section = document.getElementById('d-section').value;
+  const disc = document.getElementById('d-discipline').value;
+  const tone = document.getElementById('d-tone').value;
+  const notes = document.getElementById('d-notes').value.trim();
+
+  const sys = `You are an expert academic writer in ${disc}. Write natural, human-sounding scholarly prose. Tone: ${tone}.
+
+NEVER USE: significance inflation ("testament to", "pivotal", "evolving landscape", "groundbreaking"); promotional language ("vibrant", "transformative", "cutting-edge", "nestled"); filler phrases ("It is important to note", "At its core"); generic endings ("the future looks bright"); copula avoidance (use "is"/"are" not "serves as"); synonym cycling or rule-of-three padding.
+
+HEDGING: Use appropriate epistemic hedging throughout. Where evidence is provisional or contested: "suggests", "appears to", "may indicate", "is consistent with", "cannot be ruled out", "warrants further investigation", "preliminary evidence indicates", "tends to", "the data point toward". Hedge in proportion to actual certainty — neither overclaim nor underclaim.
+
+WRITING QUALITY: Vary sentence length and rhythm. Let reasoning show. Write like a scholar thinks. Avoid bullet points unless the section type demands them.
+
+Return ONLY the ${section}. No preamble.`;
+
+  const prompt = `Write a ${section} for ${disc} research.\n\nTopic / thesis: ${topic}${notes ? '\n\nKey points:\n' + notes : ''}`;
+
+  await stream(sys, prompt,
+    document.getElementById('d-output'), 'd-status',
+    document.getElementById('d-btn'), false, 'd-chips', 'draft-output');
+}
+
+async function runCritique() {
+  if (busy) return;
+  const input = document.getElementById('c-input').value.trim();
+  if (!input) { setStatus('c-status', 'Paste text to critique first.'); return; }
+  const disc = document.getElementById('c-discipline').value;
+  const focus = document.getElementById('c-focus').value;
+
+  busy = true;
+  const btn = document.getElementById('c-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Analysing…';
+  setStatus('c-status', 'Reading your text…');
+  document.getElementById('c-results').style.display = 'none';
+
+  const sys = `You are a rigorous academic peer reviewer in ${disc}. Focus especially on: ${focus}. Analyse the text and return ONLY a valid JSON object — no markdown fences, no preamble:
+
+{"scores":{"argument":<0-10>,"hedging":<0-10>,"structure":<0-10>,"style":<0-10>},"strengths":"<2-3 sentences>","weaknesses":"<2-3 sentences on main problems>","hedging_analysis":"<specific analysis of how hedging is used or misused — identify overclaims, under-hedged assertions, missing epistemic qualifiers, or inappropriate certainty>","ai_tells":"<list phrases or patterns that read as AI-generated, or state none found>","recommendations":"<3-5 concrete, specific suggestions>"}
+
+Be direct and specific. No filler.`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 1200,
+        system: sys, messages: [{ role: 'user', content: input }]
+      })
+    });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'API error'); }
+    const data = await res.json();
+    const raw = data.content.map(b => b.text||'').join('').replace(/```json|```/g,'').trim();
+    const r = JSON.parse(raw);
+
+    document.getElementById('c-scores').innerHTML =
+      [['argument','Argument'],['hedging','Hedging'],['structure','Structure'],['style','Style']].map(([k,l]) =>
+        `<div class="score-card"><div class="score-val">${r.scores[k]}<span style="font-size:0.85rem;color:#bbb">/10</span></div><div class="score-lbl">${l}</div></div>`
+      ).join('');
+
+    const textEl = document.getElementById('c-text');
+    textEl.className = 'critique-text';
+    textEl.innerHTML = [
+      ['Strengths','strengths'],['Weaknesses','weaknesses'],
+      ['Hedging & epistemic claims','hedging_analysis'],
+      ['AI tells','ai_tells'],['Recommendations','recommendations']
+    ].map(([title, key]) =>
+      `<div class="critique-block"><div class="critique-block-title">${title}</div><div>${r[key]||'—'}</div></div>`
+    ).join('');
+
+    lastCritique = r;
+    lastCritiqueInput = input;
+    document.getElementById('c-fixed-wrapper').style.display = 'none';
+    document.getElementById('c-apply-btn').disabled = false;
+    document.getElementById('c-apply-btn').textContent = 'Apply fixes →';
+    document.getElementById('c-results').style.display = 'block';
+    setStatus('c-status', 'Analysis complete — click \'Apply fixes\' to correct your text instantly.');
+  } catch(err) {
+    setStatus('c-status', 'Error: ' + (err.message || 'Could not parse response'), true);
+  }
+  btn.disabled = false; btn.innerHTML = 'Critique'; busy = false;
+}
+
+
+function rerunCritique() {
+  const fixed = document.getElementById('c-fixed-output').textContent;
+  if (!fixed || document.getElementById('c-fixed-output').classList.contains('placeholder')) return;
+  document.getElementById('c-input').value = fixed;
+  document.getElementById('c-char-count').textContent = fixed.length + ' chars';
+  document.getElementById('c-results').style.display = 'none';
+  document.getElementById('c-fixed-wrapper').style.display = 'none';
+  runCritique();
+}
+
+async function applyFixes() {
+  if (busy || !lastCritique || !lastCritiqueInput) return;
+  busy = true;
+
+  const applyBtn = document.getElementById('c-apply-btn');
+  applyBtn.disabled = true;
+  applyBtn.innerHTML = '<span class="spinner" style="border-top-color:#1a1a18;border-color:rgba(0,0,0,0.2);"></span>Fixing…';
+
+  const wrapper = document.getElementById('c-fixed-wrapper');
+  wrapper.style.display = 'block';
+
+  const origMirror = document.getElementById('c-original-mirror');
+  origMirror.textContent = lastCritiqueInput;
+  origMirror.className = 'output-area';
+
+  const fixedEl = document.getElementById('c-fixed-output');
+  fixedEl.textContent = '';
+  fixedEl.className = 'output-area';
+
+  setStatus('c-fix-status', 'Applying recommendations…');
+
+  const r = lastCritique;
+  const disc = document.getElementById('c-discipline').value;
+
+  const sys = `You are an expert academic editor in ${disc}. You will receive a text and a detailed peer review critique of it. Your job is to apply every single recommendation from the critique to produce a corrected version of the text.
+
+RULES:
+- Apply ALL recommendations precisely and completely — do not skip any
+- Fix every weakness identified
+- Correct every AI-generated tell listed
+- Improve hedging exactly as the hedging analysis specifies — add missing epistemic qualifiers, soften overclaims, remove inappropriate certainty
+- Strengthen the argument and structure where the critique flags problems
+- Preserve the core academic content and all factual claims
+- The fixed text should be the same length or slightly longer — do not compress or summarise
+- Return ONLY the corrected text. No preamble, no explanation, no labels.`;
+
+  const prompt = `ORIGINAL TEXT:
+${lastCritiqueInput}
+
+PEER REVIEW CRITIQUE:
+Weaknesses: ${r.weaknesses}
+Hedging analysis: ${r.hedging_analysis}
+AI tells to fix: ${r.ai_tells}
+Recommendations: ${r.recommendations}
+
+Apply every recommendation above and return the fully corrected text.`;
+
+  let fixedText = '';
+  let chars = 0;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514', max_tokens: 2000, stream: true,
+        system: sys,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'API error'); }
+
+    const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const d = line.slice(6); if (d === '[DONE]') continue;
+        try {
+          const p = JSON.parse(d);
+          if (p.type === 'content_block_delta' && p.delta?.text) {
+            fixedText += p.delta.text;
+            fixedEl.textContent = fixedText;
+            chars++;
+            if (chars % 30 === 0) setStatus('c-fix-status', 'Rewriting… ' + fixedText.split(/\s+/).filter(Boolean).length + ' words');
+          }
+        } catch(e) {}
+      }
+    }
+
+    const wc = fixedText.split(/\s+/).filter(Boolean).length;
+    setStatus('c-fix-status', 'Done — ' + wc + ' words. Copy your corrected text below.');
+    applyBtn.textContent = 'Fixes applied ✓';
+
+  } catch(err) {
+    setStatus('c-fix-status', 'Error: ' + (err.message || 'Something went wrong'), true);
+    applyBtn.disabled = false; applyBtn.textContent = 'Apply fixes →';
+  }
+
+  busy = false;
+}
+
+</script>
+</body>
+</html>
